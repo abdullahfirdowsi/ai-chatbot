@@ -3,7 +3,7 @@
   <div class="chat-header">
     <div class="header-left">
       <div class="bot-avatar">
-        <img src="assets/images/logo.png" alt="AI Chatbot" class="bot-logo">
+        <img src="images/logo.png" alt="AI Chatbot" class="bot-logo">
       </div>
       <div class="bot-info">
         <h3 class="bot-name">AI Chatbot</h3>
@@ -27,7 +27,7 @@
     <!-- Welcome Message -->
     <div *ngIf="messages.length === 0" class="welcome-section">
       <div class="welcome-avatar">
-        <img src="assets/images/logo.png" 
+        <img src="images/logo.png" 
              alt="AI Chatbot" 
              class="welcome-logo">
       </div>
@@ -54,7 +54,7 @@
         <!-- Bot Message -->
         <div *ngIf="message.sender === 'bot'" class="message-container bot">
           <div class="message-avatar">
-            <img src="assets/images/logo.png" 
+            <img src="images/logo.png" 
                  alt="AI Chatbot" 
                  class="avatar-img">
           </div>
@@ -90,7 +90,7 @@
     <!-- Typing Indicator -->
     <div *ngIf="isLoading" class="typing-indicator">
       <div class="typing-avatar">
-        <img src="assets/images/logo.png" 
+        <img src="images/logo.png" 
              alt="AI Chatbot" 
              class="avatar-img">
       </div>
