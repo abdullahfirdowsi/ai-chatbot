@@ -1,16 +1,56 @@
 <div class="chat-container">
   <div class="chat-header">
-    <h2>AI Tutor Chatbot</h2>
+    <div class="header-content">
+      <h2>VizTalk AI Tutor</h2>
+      <button 
+        mat-icon-button 
+        color="warn"
+        (click)="clearConversation()" 
+        [disabled]="isLoading || messages.length === 0"
+        title="Clear conversation"
+        class="clear-btn">
+        <mat-icon>delete_sweep</mat-icon>
+      </button>
+    </div>
   </div>
   <div class="chat-body" #chatBody>
+    <div *ngIf="messages.length === 0" class="welcome-message">
+      <div class="welcome-content">
+        <mat-icon class="welcome-icon">school</mat-icon>
+        <h3>Welcome to VizTalk!</h3>
+        <p>I'm your friendly AI tutor. Ask me anything you'd like to learn about!</p>
+      </div>
+    </div>
     <div *ngFor="let m of messages" [ngClass]="{'user': m.sender==='user', 'bot': m.sender==='bot'}">
       <div class="message">
         <span>{{ m.text }}</span>
       </div>
     </div>
+    <div *ngIf="isLoading" class="loading-indicator">
+      <div class="typing-animation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <span class="loading-text">VizTalk is thinking...</span>
+    </div>
   </div>
-  <form (submit)="sendMessage()" class="chat-input">
-    <input [(ngModel)]="userInput" name="userInput" required placeholder="Type your message..." />
-    <button mat-raised-button color="primary" type="submit">Send</button>
+  <form (submit)="sendMessage(); $event.preventDefault()" class="chat-input">
+    <input 
+      [(ngModel)]="userInput" 
+      name="userInput" 
+      placeholder="Type your message..." 
+      [disabled]="isLoading"
+      autocomplete="off" />
+    <button 
+      mat-raised-button 
+      color="primary" 
+      type="submit" 
+      [disabled]="!userInput.trim() || isLoading"
+      class="send-btn">
+      <mat-icon *ngIf="!isLoading">send</mat-icon>
+      <mat-icon *ngIf="isLoading" class="spinning">hourglass_empty</mat-icon>
+      {{ isLoading ? 'Sending...' : 'Send' }}
+    </button>
   </form>
 </div>
