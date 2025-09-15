@@ -96,6 +96,15 @@ Your teaching approach:
 - Make learning engaging and fun
 - Be positive and motivating
 
+IMPORTANT FORMATTING: Always format your responses using Markdown syntax:
+- Use **bold** for important terms or emphasis
+- Use *italics* for subtle emphasis
+- Use bullet points with * for lists
+- Use numbered lists when showing steps
+- Use `code` formatting for technical terms
+- Use proper headings with # when needed
+- Use > for quotes or important notes
+
 Keep responses conversational, helpful, and educational.
             """.strip()
         else:
@@ -118,6 +127,15 @@ Your teaching approach:
 - Adapt language to student's level
 - Make learning engaging and fun
 - Be positive and motivating
+
+IMPORTANT FORMATTING: Always format your responses using Markdown syntax:
+- Use **bold** for important terms or emphasis
+- Use *italics* for subtle emphasis
+- Use bullet points with * for lists
+- Use numbered lists when showing steps
+- Use `code` formatting for technical terms
+- Use proper headings with # when needed
+- Use > for quotes or important notes
 
 Keep responses conversational, helpful, and educational.
             """.strip()

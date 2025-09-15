@@ -60,7 +60,7 @@
           </div>
           <div class="message-content">
             <div class="message-bubble bot-bubble">
-              <p class="message-text">{{ message.text }}</p>
+              <div class="message-text" [innerHTML]="parseMarkdown(message.text)"></div>
             </div>
             <div class="message-meta">
               <span class="message-time">{{ formatTime(message.timestamp) }}</span>
@@ -72,7 +72,7 @@
         <div *ngIf="message.sender === 'user'" class="message-container user">
           <div class="message-content">
             <div class="message-bubble user-bubble">
-              <p class="message-text">{{ message.text }}</p>
+              <div class="message-text">{{ message.text }}</div>
             </div>
             <div class="message-meta">
               <span class="message-time">{{ formatTime(message.timestamp) }}</span>

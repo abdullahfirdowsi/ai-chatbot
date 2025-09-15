@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 interface Message {
   text: string;
@@ -28,7 +29,7 @@ export class ChatComponent implements OnInit {
   isLoading: boolean = false;
   private readonly API_BASE_URL = 'http://localhost:8000';
 
-  constructor(private http: HttpClient, private snackBar: MatSnackBar) {}
+  constructor(private http: HttpClient, private snackBar: MatSnackBar, private sanitizer: DomSanitizer) {}
 
   ngOnInit(): void {}
 
@@ -44,6 +45,9 @@ export class ChatComponent implements OnInit {
     });
     this.userInput = '';
     this.isLoading = true;
+    
+    // Immediately scroll to show the user's message
+    this.scrollToBottom();
 
     this.http.post<any>(`${this.API_BASE_URL}/chat`, { message: userMsg }).subscribe({
       next: (res) => {
@@ -126,12 +130,49 @@ export class ChatComponent implements OnInit {
 
 
   private scrollToBottom() {
-    // Small delay to ensure DOM is updated
+    // Small delay to ensure DOM is updated and new message is rendered
     setTimeout(() => {
       const messagesContainer = document.querySelector('.messages-container');
       if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // Scroll to the very bottom with smooth behavior
+        messagesContainer.scrollTo({
+          top: messagesContainer.scrollHeight,
+          behavior: 'smooth'
+        });
       }
-    }, 100);
+    }, 150);
+  }
+
+  // Simple markdown parser for basic formatting
+  parseMarkdown(text: string): SafeHtml {
+    if (!text) return this.sanitizer.bypassSecurityTrustHtml('');
+    
+    let html = text
+      // Convert **bold** to <strong> first (process bold before italic)
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      // Convert `code` to <code>
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      // Convert remaining *italic* to <em> (after bold is processed)
+      .replace(/\*([^*<>]+)\*/g, '<em>$1</em>')
+      // Convert bullet points at start of line
+      .replace(/^\* (.+)$/gm, '|||LIST_ITEM|||$1|||END_LIST_ITEM|||')
+      // Convert numbered lists
+      .replace(/^\d+\. (.+)$/gm, '|||LIST_ITEM|||$1|||END_LIST_ITEM|||')
+      // Convert line breaks
+      .replace(/\n/g, '<br>');
+    
+    // Process list items
+    const listItems = html.match(/(\|\|\|LIST_ITEM\|\|\|[^|]+\|\|\|END_LIST_ITEM\|\|\|(?:<br>)?)+/g);
+    if (listItems) {
+      listItems.forEach(listGroup => {
+        const items = listGroup
+          .replace(/\|\|\|LIST_ITEM\|\|\|/g, '<li>')
+          .replace(/\|\|\|END_LIST_ITEM\|\|\|/g, '</li>')
+          .replace(/<br>/g, '');
+        html = html.replace(listGroup, '<ul>' + items + '</ul>');
+      });
+    }
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 }
