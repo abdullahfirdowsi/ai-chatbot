@@ -242,8 +242,8 @@
 }
 
 .message-container.user {
-  /* User messages: message on left, avatar on right */
-  flex-direction: row-reverse;
+  /* User messages: avatar on right, message on left */
+  flex-direction: row;
 }
 
 /* Message Avatars */
@@ -572,7 +572,7 @@
   
   .messages-list {
     padding: 1rem;
-    gap: 1.25rem;
+    gap: 0.875rem;
   }
   
   .message-container {
