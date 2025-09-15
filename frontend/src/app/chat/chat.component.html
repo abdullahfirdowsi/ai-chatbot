@@ -1,0 +1,16 @@
+<div class="chat-container">
+  <div class="chat-header">
+    <h2>AI Tutor Chatbot</h2>
+  </div>
+  <div class="chat-body" #chatBody>
+    <div *ngFor="let m of messages" [ngClass]="{'user': m.sender==='user', 'bot': m.sender==='bot'}">
+      <div class="message">
+        <span>{{ m.text }}</span>
+      </div>
+    </div>
+  </div>
+  <form (submit)="sendMessage()" class="chat-input">
+    <input [(ngModel)]="userInput" name="userInput" required placeholder="Type your message..." />
+    <button mat-raised-button color="primary" type="submit">Send</button>
+  </form>
+</div>
