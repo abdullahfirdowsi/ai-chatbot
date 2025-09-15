@@ -211,7 +211,7 @@
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .message-wrapper {
@@ -219,19 +219,30 @@
   width: 100%;
 }
 
+/* Bot messages - Left side */
+.message-wrapper.bot-message {
+  justify-content: flex-start;
+}
+
+/* User messages - Right side */
+.message-wrapper.user-message {
+  justify-content: flex-end;
+}
+
 .message-container {
   display: flex;
-  max-width: 75%;
+  max-width: 70%;
   gap: 0.75rem;
   align-items: flex-start;
 }
 
 .message-container.bot {
-  align-self: flex-start;
+  /* Bot messages: avatar on left, message on right */
+  flex-direction: row;
 }
 
 .message-container.user {
-  align-self: flex-end;
+  /* User messages: message on left, avatar on right */
   flex-direction: row-reverse;
 }
 
@@ -307,7 +318,12 @@
   font-weight: 400;
 }
 
-.user .message-time {
+/* Time alignment for different message types */
+.message-container.bot .message-time {
+  text-align: left;
+}
+
+.message-container.user .message-time {
   text-align: right;
 }
 
