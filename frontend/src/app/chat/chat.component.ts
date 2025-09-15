@@ -124,22 +124,6 @@ export class ChatComponent implements OnInit {
     return Math.random().toString(36).substring(2) + Date.now().toString(36);
   }
 
-  onLogoLoad(event: any) {
-    // Logo loaded successfully, hide fallback
-    const fallback = event.target.parentElement.querySelector('.fallback-icon');
-    if (fallback) {
-      fallback.style.display = 'none';
-    }
-  }
-
-  onLogoError(event: any) {
-    // Hide the broken image and show the fallback
-    event.target.style.display = 'none';
-    const fallback = event.target.parentElement.querySelector('.fallback-icon');
-    if (fallback) {
-      fallback.style.display = 'flex';
-    }
-  }
 
   private scrollToBottom() {
     // Small delay to ensure DOM is updated

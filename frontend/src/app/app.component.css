@@ -45,15 +45,6 @@
   gap: 1rem;
 }
 
-.logo-container {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
 .app-logo {
   width: 48px;
   height: 48px;
@@ -63,22 +54,6 @@
 }
 
 .app-logo:hover {
-  transform: scale(1.05);
-}
-
-.fallback-icon {
-  width: 48px !important;
-  height: 48px !important;
-  font-size: 36px !important;
-  color: rgba(255, 255, 255, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-  transition: transform 0.3s ease;
-}
-
-.fallback-icon:hover {
   transform: scale(1.05);
 }
 
