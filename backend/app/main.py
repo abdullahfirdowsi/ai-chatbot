@@ -2,7 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import router
 
-app = FastAPI()
+app = FastAPI(
+    title="AI Chatbot API",
+    description="A modern AI-powered chatbot backend built with FastAPI",
+    version="1.0.0",
+    contact={
+        "name": "AI Chatbot Support"
+    }
+)
 
 app.add_middleware(
     CORSMiddleware,

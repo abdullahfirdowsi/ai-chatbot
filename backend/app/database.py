@@ -6,5 +6,5 @@ load_dotenv()
 
 MONGODB_URI = os.getenv("MONGO_URI")
 client = MongoClient(MONGODB_URI)
-db = client["chatbotDB"]
+db = client["ai_chatbot_db"]
 messages_col = db["messages"]

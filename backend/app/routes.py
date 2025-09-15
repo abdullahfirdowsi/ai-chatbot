@@ -14,10 +14,10 @@ router = APIRouter()
 
 # Initialize Groq client
 client = Groq(
-    api_key=os.getenv("API_KEY")
+    api_key=os.getenv("AI_CHATBOT_API_KEY")
 )
 
-MODEL_NAME = os.getenv("MODEL_NAME", "gemma2-9b-it")
+MODEL_NAME = os.getenv("AI_CHATBOT_MODEL_NAME", "gemma2-9b-it")
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -59,11 +59,11 @@ async def chat_endpoint(chat: ChatMessage):
         return {"reply": bot_reply}
     
     except Exception as e:
-        print(f"Error in chat endpoint: {str(e)}")
+        logger.error(f"AI Chatbot - Error in chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail="Sorry, I encountered an error. Please try again.")
 
 async def generate_tutor_response(user_message: str) -> str:
-    """Generate AI tutor responses using Grok API with conversation context"""
+    """Generate AI Chatbot responses using Grok API with conversation context"""
     try:
         # Get conversation history (last 10 messages for context)
         recent_messages = list(messages_col.find().sort("timestamp", -1).limit(10))
@@ -78,9 +78,9 @@ async def generate_tutor_response(user_message: str) -> str:
         # System prompt that adapts based on whether it's the first interaction
         if is_first_interaction:
             system_prompt = """
-You are VizTalk, an intelligent AI tutor. This is your FIRST interaction with this student.
+You are AI Chatbot, an intelligent AI tutor. This is your FIRST interaction with this student.
 
-For this FIRST message only, introduce yourself briefly as "Hi there! I'm VizTalk, your friendly AI tutor" and then proceed to help with their question.
+For this FIRST message only, introduce yourself briefly as "Hi there! I'm AI Chatbot, your friendly AI tutor" and then proceed to help with their question.
 
 Your personality:
 - Encouraging and supportive
@@ -100,7 +100,7 @@ Keep responses conversational, helpful, and educational.
             """.strip()
         else:
             system_prompt = """
-You are VizTalk, an AI tutor continuing an ongoing conversation with a student.
+You are AI Chatbot, an AI tutor continuing an ongoing conversation with a student.
 
 DO NOT introduce yourself again - you've already met this student.
 Simply continue the conversation naturally and helpfully.
@@ -147,7 +147,7 @@ Keep responses conversational, helpful, and educational.
         })
         
         # Make API call to Grok
-        logger.info(f"Making API call to Grok for message: {user_message[:50]}... (First interaction: {is_first_interaction})")
+        logger.info(f"AI Chatbot - Making API call to Grok for message: {user_message[:50]}... (First interaction: {is_first_interaction})")
         
         response = client.chat.completions.create(
             model=MODEL_NAME,
@@ -160,14 +160,14 @@ Keep responses conversational, helpful, and educational.
         # Extract the response
         if response.choices and len(response.choices) > 0:
             ai_response = response.choices[0].message.content.strip()
-            logger.info("Successfully generated response from Grok API")
+            logger.info("AI Chatbot - Successfully generated response from Grok API")
             return ai_response
         else:
-            logger.warning("No response choices returned from API")
+            logger.warning("AI Chatbot - No response choices returned from API")
             return "I'm here to help you learn! What would you like to explore today?"
             
     except Exception as e:
-        logger.error(f"Error calling Grok API: {str(e)}")
+        logger.error(f"AI Chatbot - Error calling Grok API: {str(e)}")
         # Fallback to a simple response if API fails
         import random
         return random.choice(FALLBACK_RESPONSES)
@@ -179,17 +179,17 @@ async def clear_conversation():
         messages_col.delete_many({})
         return {"message": "Conversation history cleared successfully"}
     except Exception as e:
-        logger.error(f"Error clearing conversation: {str(e)}")
+        logger.error(f"AI Chatbot - Error clearing conversation: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to clear conversation")
 
 @router.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "VizTalk AI Tutor Backend"}
+    return {"status": "healthy", "service": "AI Chatbot Backend"}
 
 @router.get("/")
 async def root():
     return {
-        "message": "Welcome to VizTalk AI Tutor Backend!",
+        "message": "Welcome to AI Chatbot Backend!",
         "version": "1.0.0",
         "endpoints": {
             "/chat": "POST - Send chat message",

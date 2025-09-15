@@ -1,9 +1,29 @@
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
 <div class="app-container">
-  <header>
-    <h1>{{ title() }}</h1>
+  <header class="app-header">
+    <div class="header-content">
+      <div class="logo-section">
+        <div class="logo-container">
+          <img src="assets/images/logo.png" 
+               alt="AI Chatbot" 
+               class="app-logo"
+               (error)="onLogoError($event)"
+               (load)="onLogoLoad($event)">
+          <mat-icon class="app-logo fallback-icon" style="display: none;">smart_toy</mat-icon>
+        </div>
+        <h1 class="app-title">{{ title() }}</h1>
+      </div>
+      <div class="header-actions">
+        <div class="status-indicator">
+          <div class="status-dot"></div>
+          <span class="status-text">Online</span>
+        </div>
+      </div>
+    </div>
   </header>
-  <main>
-    <app-chat></app-chat>
+  
+  <main class="app-main">
+    <div class="chat-wrapper">
+      <app-chat></app-chat>
+    </div>
   </main>
 </div>

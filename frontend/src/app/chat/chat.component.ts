@@ -1,20 +1,24 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 interface Message {
   text: string;
   sender: 'user' | 'bot';
+  timestamp: Date;
+  id: string;
 }
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, MatSnackBarModule],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, MatSnackBarModule, MatTooltipModule],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css']
 })
@@ -32,13 +36,23 @@ export class ChatComponent implements OnInit {
     if (!this.userInput.trim() || this.isLoading) return;
     
     const userMsg = this.userInput.trim();
-    this.messages.push({ text: userMsg, sender: 'user' });
+    this.messages.push({ 
+      text: userMsg, 
+      sender: 'user',
+      timestamp: new Date(),
+      id: this.generateId()
+    });
     this.userInput = '';
     this.isLoading = true;
 
     this.http.post<any>(`${this.API_BASE_URL}/chat`, { message: userMsg }).subscribe({
       next: (res) => {
-        this.messages.push({ text: res.reply, sender: 'bot' });
+        this.messages.push({ 
+          text: res.reply, 
+          sender: 'bot',
+          timestamp: new Date(),
+          id: this.generateId()
+        });
         this.isLoading = false;
         this.scrollToBottom();
       },
@@ -46,7 +60,9 @@ export class ChatComponent implements OnInit {
         console.error('Chat error:', err);
         this.messages.push({ 
           text: "Sorry, I encountered an error. Please try again.", 
-          sender: 'bot' 
+          sender: 'bot',
+          timestamp: new Date(),
+          id: this.generateId()
         });
         this.isLoading = false;
         this.snackBar.open('Connection error. Please check if the server is running.', 'Close', {
@@ -83,12 +99,54 @@ export class ChatComponent implements OnInit {
     });
   }
 
+  getSuggestedQuestions(): string[] {
+    return [
+      'What can you help me with?',
+      'Tell me about artificial intelligence',
+      'How do you work?',
+      'What are your capabilities?'
+    ];
+  }
+
+  trackByMessageId(index: number, message: Message): string {
+    return message.id;
+  }
+
+  formatTime(timestamp: Date): string {
+    return new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }).format(timestamp);
+  }
+
+  private generateId(): string {
+    return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  }
+
+  onLogoLoad(event: any) {
+    // Logo loaded successfully, hide fallback
+    const fallback = event.target.parentElement.querySelector('.fallback-icon');
+    if (fallback) {
+      fallback.style.display = 'none';
+    }
+  }
+
+  onLogoError(event: any) {
+    // Hide the broken image and show the fallback
+    event.target.style.display = 'none';
+    const fallback = event.target.parentElement.querySelector('.fallback-icon');
+    if (fallback) {
+      fallback.style.display = 'flex';
+    }
+  }
+
   private scrollToBottom() {
     // Small delay to ensure DOM is updated
     setTimeout(() => {
-      const chatBody = document.querySelector('.chat-body');
-      if (chatBody) {
-        chatBody.scrollTop = chatBody.scrollHeight;
+      const messagesContainer = document.querySelector('.messages-container');
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }
     }, 100);
   }

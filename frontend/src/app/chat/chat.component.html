@@ -1,56 +1,155 @@
-<div class="chat-container">
+<div class="modern-chat-container">
+  <!-- Chat Header -->
   <div class="chat-header">
-    <div class="header-content">
-      <h2>VizTalk AI Tutor</h2>
+    <div class="header-left">
+      <div class="bot-avatar">
+        <div class="logo-container">
+          <img src="assets/images/logo.png" 
+               alt="AI Chatbot" 
+               class="bot-logo"
+               (error)="onLogoError($event)"
+               (load)="onLogoLoad($event)">
+          <mat-icon class="bot-logo fallback-icon" style="display: none;">smart_toy</mat-icon>
+        </div>
+      </div>
+      <div class="bot-info">
+        <h3 class="bot-name">AI Chatbot</h3>
+        <p class="bot-status">{{ isLoading ? 'Typing...' : 'Online' }}</p>
+      </div>
+    </div>
+    <div class="header-actions">
       <button 
-        mat-icon-button 
-        color="warn"
+        mat-icon-button
         (click)="clearConversation()" 
         [disabled]="isLoading || messages.length === 0"
-        title="Clear conversation"
-        class="clear-btn">
-        <mat-icon>delete_sweep</mat-icon>
+        matTooltip="Clear conversation"
+        class="action-btn clear-btn">
+        <mat-icon>refresh</mat-icon>
       </button>
     </div>
   </div>
-  <div class="chat-body" #chatBody>
-    <div *ngIf="messages.length === 0" class="welcome-message">
+
+  <!-- Messages Area -->
+  <div class="messages-container" #messagesContainer>
+    <!-- Welcome Message -->
+    <div *ngIf="messages.length === 0" class="welcome-section">
+      <div class="welcome-avatar">
+        <img src="assets/images/logo.png" 
+             alt="AI Chatbot" 
+             class="welcome-logo"
+             (error)="onLogoError($event)">
+        <img src="assets/images/logo-fallback.svg" 
+             alt="AI Chatbot" 
+             class="welcome-logo fallback-logo"
+             style="display: none;">
+      </div>
       <div class="welcome-content">
-        <mat-icon class="welcome-icon">school</mat-icon>
-        <h3>Welcome to VizTalk!</h3>
-        <p>I'm your friendly AI tutor. Ask me anything you'd like to learn about!</p>
+        <h2 class="welcome-title">Hello! I'm your AI Assistant</h2>
+        <p class="welcome-subtitle">I'm here to help answer your questions and assist with various tasks. What can I help you with today?</p>
+        <div class="suggested-questions">
+          <button 
+            *ngFor="let suggestion of getSuggestedQuestions()" 
+            class="suggestion-chip"
+            (click)="userInput = suggestion; sendMessage()">
+            {{ suggestion }}
+          </button>
+        </div>
       </div>
     </div>
-    <div *ngFor="let m of messages" [ngClass]="{'user': m.sender==='user', 'bot': m.sender==='bot'}">
-      <div class="message">
-        <span>{{ m.text }}</span>
+
+    <!-- Chat Messages -->
+    <div class="messages-list" *ngIf="messages.length > 0">
+      <div *ngFor="let message of messages; trackBy: trackByMessageId" 
+           [ngClass]="{'message-wrapper': true, 'user-message': message.sender === 'user', 'bot-message': message.sender === 'bot'}"
+           class="fade-in">
+        
+        <!-- Bot Message -->
+        <div *ngIf="message.sender === 'bot'" class="message-container bot">
+          <div class="message-avatar">
+            <img src="assets/images/logo.png" 
+                 alt="AI Chatbot" 
+                 class="avatar-img"
+                 (error)="onLogoError($event)">
+            <img src="assets/images/logo-fallback.svg" 
+                 alt="AI Chatbot" 
+                 class="avatar-img fallback-logo"
+                 style="display: none;">
+          </div>
+          <div class="message-content">
+            <div class="message-bubble bot-bubble">
+              <p class="message-text">{{ message.text }}</p>
+            </div>
+            <div class="message-meta">
+              <span class="message-time">{{ formatTime(message.timestamp) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Message -->
+        <div *ngIf="message.sender === 'user'" class="message-container user">
+          <div class="message-content">
+            <div class="message-bubble user-bubble">
+              <p class="message-text">{{ message.text }}</p>
+            </div>
+            <div class="message-meta">
+              <span class="message-time">{{ formatTime(message.timestamp) }}</span>
+            </div>
+          </div>
+          <div class="message-avatar">
+            <div class="user-avatar">
+              <mat-icon>person</mat-icon>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div *ngIf="isLoading" class="loading-indicator">
-      <div class="typing-animation">
-        <span></span>
-        <span></span>
-        <span></span>
+
+    <!-- Typing Indicator -->
+    <div *ngIf="isLoading" class="typing-indicator">
+      <div class="typing-avatar">
+        <img src="assets/images/logo.png" 
+             alt="AI Chatbot" 
+             class="avatar-img"
+             (error)="onLogoError($event)">
+        <img src="assets/images/logo-fallback.svg" 
+             alt="AI Chatbot" 
+             class="avatar-img fallback-logo"
+             style="display: none;">
       </div>
-      <span class="loading-text">VizTalk is thinking...</span>
+      <div class="typing-bubble">
+        <div class="typing-dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
     </div>
   </div>
-  <form (submit)="sendMessage(); $event.preventDefault()" class="chat-input">
-    <input 
-      [(ngModel)]="userInput" 
-      name="userInput" 
-      placeholder="Type your message..." 
-      [disabled]="isLoading"
-      autocomplete="off" />
-    <button 
-      mat-raised-button 
-      color="primary" 
-      type="submit" 
-      [disabled]="!userInput.trim() || isLoading"
-      class="send-btn">
-      <mat-icon *ngIf="!isLoading">send</mat-icon>
-      <mat-icon *ngIf="isLoading" class="spinning">hourglass_empty</mat-icon>
-      {{ isLoading ? 'Sending...' : 'Send' }}
-    </button>
-  </form>
+
+  <!-- Input Area -->
+  <div class="input-area">
+    <form (submit)="sendMessage(); $event.preventDefault()" class="message-form">
+      <div class="input-wrapper">
+        <input 
+          [(ngModel)]="userInput" 
+          name="userInput" 
+          placeholder="Type your message here..." 
+          [disabled]="isLoading"
+          autocomplete="off"
+          class="message-input" 
+          #messageInput>
+        <button 
+          type="submit" 
+          [disabled]="!userInput.trim() || isLoading"
+          class="send-button"
+          matTooltip="Send message">
+          <mat-icon *ngIf="!isLoading">send</mat-icon>
+          <mat-icon *ngIf="isLoading" class="loading-icon">hourglass_empty</mat-icon>
+        </button>
+      </div>
+    </form>
+    <div class="input-footer">
+      <p class="disclaimer">AI Chatbot can make mistakes. Please verify important information.</p>
+    </div>
+  </div>
 </div>
