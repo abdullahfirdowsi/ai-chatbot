@@ -45,8 +45,8 @@ async def chat_endpoint(chat: ChatMessage):
         }
         messages_col.insert_one(user_message)
 
-        # Generate intelligent tutor response
-        bot_reply = generate_tutor_response(chat.message)
+        # Generate intelligent tutor response with conversation context
+        bot_reply = await generate_tutor_response(chat.message)
 
         # Save bot reply with timestamp
         bot_message = {
@@ -62,45 +62,96 @@ async def chat_endpoint(chat: ChatMessage):
         print(f"Error in chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail="Sorry, I encountered an error. Please try again.")
 
-def generate_tutor_response(user_message: str) -> str:
-    """Generate AI tutor responses using Grok API"""
+async def generate_tutor_response(user_message: str) -> str:
+    """Generate AI tutor responses using Grok API with conversation context"""
     try:
-        # Create a system prompt that defines the AI tutor's personality and approach
-        system_prompt = """
-You are VizTalk, an intelligent AI tutor designed to help students learn effectively. Your personality is:
+        # Get conversation history (last 10 messages for context)
+        recent_messages = list(messages_col.find().sort("timestamp", -1).limit(10))
+        recent_messages.reverse()  # Put in chronological order
+        
+        # Check if this is the first interaction (no previous bot messages)
+        is_first_interaction = not any(msg["sender"] == "bot" for msg in recent_messages)
+        
+        # Create conversation context
+        conversation_messages = []
+        
+        # System prompt that adapts based on whether it's the first interaction
+        if is_first_interaction:
+            system_prompt = """
+You are VizTalk, an intelligent AI tutor. This is your FIRST interaction with this student.
+
+For this FIRST message only, introduce yourself briefly as "Hi there! I'm VizTalk, your friendly AI tutor" and then proceed to help with their question.
+
+Your personality:
+- Encouraging and supportive
+- Patient and understanding  
+- Clear in explanations
+- Enthusiastic about learning
+- Ask follow-up questions to ensure understanding
+
+Your teaching approach:
+- Use examples and analogies
+- Encourage critical thinking
+- Adapt language to student's level
+- Make learning engaging and fun
+- Be positive and motivating
+
+Keep responses conversational, helpful, and educational.
+            """.strip()
+        else:
+            system_prompt = """
+You are VizTalk, an AI tutor continuing an ongoing conversation with a student.
+
+DO NOT introduce yourself again - you've already met this student.
+Simply continue the conversation naturally and helpfully.
+
+Your personality:
 - Encouraging and supportive
 - Patient and understanding
 - Clear in explanations
 - Enthusiastic about learning
-- Able to break down complex topics into simple steps
-- Always asking follow-up questions to ensure understanding
+- Ask follow-up questions to ensure understanding
 
 Your teaching approach:
-- Use the Socratic method when appropriate
-- Provide examples and analogies
+- Use examples and analogies
 - Encourage critical thinking
-- Adapt your language to the student's level
+- Adapt language to student's level
 - Make learning engaging and fun
-- Always be positive and motivating
+- Be positive and motivating
 
-Keep your responses conversational, helpful, and educational. If you don't know something, admit it and suggest how the student might find the answer.
-        """.strip()
+Keep responses conversational, helpful, and educational.
+            """.strip()
+        
+        conversation_messages.append({
+            "role": "system",
+            "content": system_prompt
+        })
+        
+        # Add recent conversation history for context (skip system messages)
+        for msg in recent_messages[-6:]:  # Last 6 messages for context
+            if msg["sender"] == "user":
+                conversation_messages.append({
+                    "role": "user", 
+                    "content": msg["text"]
+                })
+            elif msg["sender"] == "bot":
+                conversation_messages.append({
+                    "role": "assistant",
+                    "content": msg["text"]
+                })
+        
+        # Add the current user message
+        conversation_messages.append({
+            "role": "user",
+            "content": user_message
+        })
         
         # Make API call to Grok
-        logger.info(f"Making API call to Grok for message: {user_message[:50]}...")
+        logger.info(f"Making API call to Grok for message: {user_message[:50]}... (First interaction: {is_first_interaction})")
         
         response = client.chat.completions.create(
             model=MODEL_NAME,
-            messages=[
-                {
-                    "role": "system",
-                    "content": system_prompt
-                },
-                {
-                    "role": "user",
-                    "content": user_message
-                }
-            ],
+            messages=conversation_messages,
             max_tokens=500,
             temperature=0.7,
             top_p=0.9
@@ -121,6 +172,16 @@ Keep your responses conversational, helpful, and educational. If you don't know 
         import random
         return random.choice(FALLBACK_RESPONSES)
 
+@router.delete("/chat/clear")
+async def clear_conversation():
+    """Clear conversation history"""
+    try:
+        messages_col.delete_many({})
+        return {"message": "Conversation history cleared successfully"}
+    except Exception as e:
+        logger.error(f"Error clearing conversation: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to clear conversation")
+
 @router.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "VizTalk AI Tutor Backend"}
@@ -132,6 +193,7 @@ async def root():
         "version": "1.0.0",
         "endpoints": {
             "/chat": "POST - Send chat message",
+            "/chat/clear": "DELETE - Clear conversation history",
             "/health": "GET - Health check",
             "/": "GET - API info"
         }
