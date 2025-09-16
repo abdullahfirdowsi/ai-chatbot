@@ -11,17 +11,13 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatChipsModule } from '@angular/material/chips';
+import { firstValueFrom } from 'rxjs';
+import { RagService, KnowledgeBaseStats } from '../services/rag.service';
 
 interface DocumentResult {
   content: string;
   metadata: any;
   source: string;
-}
-
-interface KnowledgeBaseStats {
-  total_documents: number;
-  embedding_dimension: number;
-  persist_directory: string;
 }
 
 @Component({
@@ -77,9 +73,9 @@ export class DocumentsComponent implements OnInit {
     return this.supportedFormats.map(f => f.ext).join(',');
   }
 
-  @ViewChild('fileInput') fileInputRef!: ElementRef<HTMLInputElement>;
+  @ViewChild('fileInputRef') fileInputRef!: ElementRef<HTMLInputElement>;
 
-  constructor(private http: HttpClient, private snackBar: MatSnackBar) {}
+  constructor(private http: HttpClient, private snackBar: MatSnackBar, private ragService: RagService) {}
 
   ngOnInit(): void {
     this.loadStats();
@@ -127,10 +123,10 @@ export class DocumentsComponent implements OnInit {
     formData.append('title', this.selectedFile.name);
 
     try {
-      const response = await this.http.post<any>(
+      const response = await firstValueFrom(this.http.post<any>(
         `${this.API_BASE_URL}/documents/upload`,
         formData
-      ).toPromise();
+      ));
 
       this.snackBar.open(
         `Successfully uploaded ${this.selectedFile.name}! Created ${response.chunks_created} chunks.`,
@@ -140,11 +136,13 @@ export class DocumentsComponent implements OnInit {
 
       // Reset form
       this.selectedFile = null;
-      const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
+      if (this.fileInputRef) {
+        this.fileInputRef.nativeElement.value = '';
+      }
       
-      // Refresh stats
+      // Refresh stats and notify service
       this.loadStats();
+      this.ragService.notifyKnowledgeBaseUpdated();
 
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -165,9 +163,9 @@ export class DocumentsComponent implements OnInit {
     this.searchResults = [];
 
     try {
-      const response = await this.http.get<any>(
+      const response = await firstValueFrom(this.http.get<any>(
         `${this.API_BASE_URL}/documents/search?query=${encodeURIComponent(this.searchQuery)}&limit=10`
-      ).toPromise();
+      ));
 
       this.searchResults = response.results || [];
       
@@ -199,10 +197,10 @@ export class DocumentsComponent implements OnInit {
       formData.append('query', this.testQuery);
       formData.append('use_context', 'true');
 
-      const response = await this.http.post<any>(
+      const response = await firstValueFrom(this.http.post<any>(
         `${this.API_BASE_URL}/documents/test-query`,
         formData
-      ).toPromise();
+      ));
 
       this.testResult = response;
 
@@ -221,9 +219,9 @@ export class DocumentsComponent implements OnInit {
     this.isLoadingStats = true;
 
     try {
-      const response = await this.http.get<any>(
+      const response = await firstValueFrom(this.http.get<any>(
         `${this.API_BASE_URL}/documents/stats`
-      ).toPromise();
+      ));
 
       this.stats = response.stats;
 

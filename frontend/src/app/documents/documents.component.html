@@ -1,9 +1,4 @@
 <div class="documents-container">
-  <div class="header">
-    <h1>📚 Knowledge Base Management</h1>
-    <p>Upload, search, and manage documents for your AI chatbot's knowledge base</p>
-  </div>
-
   <mat-tab-group class="main-tabs">
     <!-- Upload Documents Tab -->
     <mat-tab label="📤 Upload Documents">
@@ -19,6 +14,7 @@
               <input 
                 type="file" 
                 id="fileInput" 
+                #fileInputRef
                 (change)="onFileSelected($event)"
                 [accept]="acceptedFileFormats"
                 style="display: none">

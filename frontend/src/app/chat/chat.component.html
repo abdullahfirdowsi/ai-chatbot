@@ -7,7 +7,12 @@
       </div>
       <div class="bot-info">
         <h3 class="bot-name">AI Chatbot</h3>
-        <p class="bot-status">{{ isLoading ? 'Typing...' : 'Online' }}</p>
+        <p class="bot-status">
+          {{ isLoading ? 'Typing...' : 'Online' }}
+          <span *ngIf="isKnowledgeBaseAvailable" class="rag-indicator" title="Using Knowledge Base">
+            📚 RAG
+          </span>
+        </p>
       </div>
     </div>
     <div class="header-actions">

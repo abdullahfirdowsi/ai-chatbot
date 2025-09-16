@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, AfterViewChecked, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,6 +8,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { RagService } from '../services/rag.service';
+import { Subscription } from 'rxjs';
 
 interface Message {
   text: string;
@@ -23,17 +25,37 @@ interface Message {
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css']
 })
-export class ChatComponent implements OnInit {
+export class ChatComponent implements OnInit, OnDestroy {
   messages: Message[] = [];
   userInput: string = '';
   isLoading: boolean = false;
+  isKnowledgeBaseAvailable = false;
+  private subscription?: Subscription;
   private readonly API_BASE_URL = 'http://localhost:8000';
 
-  constructor(private http: HttpClient, private snackBar: MatSnackBar, private sanitizer: DomSanitizer) {}
+  constructor(
+    private http: HttpClient, 
+    private snackBar: MatSnackBar, 
+    private sanitizer: DomSanitizer,
+    private ragService: RagService
+  ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Subscribe to knowledge base availability
+    this.subscription = this.ragService.knowledgeBaseAvailable$.subscribe(
+      isAvailable => {
+        this.isKnowledgeBaseAvailable = isAvailable;
+      }
+    );
+  }
 
-  sendMessage() {
+  ngOnDestroy(): void {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+  }
+
+  async sendMessage() {
     if (!this.userInput.trim() || this.isLoading) return;
     
     const userMsg = this.userInput.trim();
@@ -49,32 +71,37 @@ export class ChatComponent implements OnInit {
     // Immediately scroll to show the user's message
     this.scrollToBottom();
 
-    this.http.post<any>(`${this.API_BASE_URL}/chat`, { message: userMsg }).subscribe({
-      next: (res) => {
-        this.messages.push({ 
-          text: res.reply, 
-          sender: 'bot',
-          timestamp: new Date(),
-          id: this.generateId()
-        });
-        this.isLoading = false;
-        this.scrollToBottom();
-      },
-      error: (err) => {
-        console.error('Chat error:', err);
-        this.messages.push({ 
-          text: "Sorry, I encountered an error. Please try again.", 
-          sender: 'bot',
-          timestamp: new Date(),
-          id: this.generateId()
-        });
-        this.isLoading = false;
-        this.snackBar.open('Connection error. Please check if the server is running.', 'Close', {
-          duration: 3000,
-          panelClass: ['error-snackbar']
-        });
-      }
-    });
+    try {
+      const response = await this.ragService.sendChatMessage(userMsg);
+      
+      // Handle different response formats from different endpoints
+      const botReply = response.response || response.reply || response.answer || 'No response received';
+      
+      this.messages.push({ 
+        text: botReply, 
+        sender: 'bot',
+        timestamp: new Date(),
+        id: this.generateId()
+      });
+      
+      this.isLoading = false;
+      this.scrollToBottom();
+    } catch (error: any) {
+      console.error('Chat error:', error);
+      this.messages.push({ 
+        text: "Sorry, I encountered an error. Please try again.", 
+        sender: 'bot',
+        timestamp: new Date(),
+        id: this.generateId()
+      });
+      this.isLoading = false;
+      
+      const errorMessage = error.error?.detail || 'Connection error. Please check if the server is running.';
+      this.snackBar.open(errorMessage, 'Close', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+    }
   }
 
   clearConversation() {

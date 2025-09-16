@@ -15,8 +15,30 @@
   </header>
   
   <main class="app-main">
-    <div class="chat-wrapper">
-      <app-chat></app-chat>
-    </div>
+    <mat-tab-group class="main-navigation" [selectedIndex]="0">
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>chat</mat-icon>
+          <span class="tab-label">Chat</span>
+        </ng-template>
+        <div class="tab-content">
+          <div class="chat-wrapper">
+            <app-chat></app-chat>
+          </div>
+        </div>
+      </mat-tab>
+      
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>library_books</mat-icon>
+          <span class="tab-label">Knowledge Base</span>
+        </ng-template>
+        <div class="tab-content">
+          <div class="documents-wrapper">
+            <app-documents></app-documents>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
   </main>
 </div>

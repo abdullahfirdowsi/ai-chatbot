@@ -13,12 +13,20 @@ load_dotenv()
 
 router = APIRouter()
 
-# Initialize Groq client
-client = Groq(
-    api_key=os.getenv("AI_CHATBOT_API_KEY")
-)
+# Groq client will be initialized when needed
+client = None
 
 MODEL_NAME = os.getenv("AI_CHATBOT_MODEL_NAME", "gemma2-9b-it")
+
+def get_groq_client():
+    """Initialize and return Groq client"""
+    global client
+    if client is None:
+        api_key = os.getenv("GROQ_API_KEY") or os.getenv("AI_CHATBOT_API_KEY")
+        if not api_key:
+            raise ValueError("GROQ_API_KEY or AI_CHATBOT_API_KEY must be set")
+        client = Groq(api_key=api_key)
+    return client
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -226,7 +234,8 @@ Keep responses conversational, helpful, and educational.
         # Make API call to Grok
         logger.info(f"AI Chatbot - Making API call to Grok for message: {user_message[:50]}... (First interaction: {is_first_interaction})")
         
-        response = client.chat.completions.create(
+        groq_client = get_groq_client()
+        response = groq_client.chat.completions.create(
             model=MODEL_NAME,
             messages=conversation_messages,
             max_tokens=500,
