@@ -1,12 +1,5 @@
 # 📋 Development Report: VizTalk AI Tutor Chatbot with RAG
 
-**To:** Roshini (Manager)  
-**From:** [Your Name]  
-**Date:** January 16, 2025  
-**Project:** VizTalk AI Tutor Chatbot with Retrieval-Augmented Generation  
-
----
-
 ## 🎯 Executive Summary
 
 I have successfully developed a **VizTalk AI Tutor Chatbot** featuring **Retrieval-Augmented Generation (RAG)** capabilities. This intelligent tutoring system combines document-based knowledge retrieval with AI-powered responses to provide contextual, accurate answers from uploaded educational materials.
