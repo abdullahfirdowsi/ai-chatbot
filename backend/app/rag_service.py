@@ -1,6 +1,5 @@
 import os
 from typing import List, Dict, Any, Optional
-from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain_groq import ChatGroq
 from langchain.schema import Document
@@ -18,61 +17,13 @@ class RAGService:
         
         # Initialize Groq LLM
         self.llm = ChatGroq(
-            groq_api_key=os.getenv("AI_CHATBOT_API_KEY"),
+            groq_api_key=os.getenv("GROQ_API_KEY") or os.getenv("AI_CHATBOT_API_KEY"),
             model_name=os.getenv("AI_CHATBOT_MODEL_NAME", "gemma2-9b-it"),
             temperature=0.7,
             max_tokens=500
         )
         
-        # Create custom prompt template
-        self.prompt_template = self._create_prompt_template()
-        
-        # Initialize RAG chain
-        self.rag_chain = self._create_rag_chain()
-    
-    def _create_prompt_template(self) -> PromptTemplate:
-        """Create a custom prompt template for the RAG chain."""
-        template = """
-You are AI Chatbot, an intelligent AI tutor. Use the following context from the knowledge base to help answer the student's question. 
-
-If the context provides relevant information, incorporate it into your response naturally. If the context doesn't contain relevant information for the question, respond based on your general knowledge but mention that you're drawing from general knowledge rather than the knowledge base.
-
-Context from Knowledge Base:
-{context}
-
-Previous Conversation:
-{chat_history}
-
-Student's Question: {question}
-
-Guidelines:
-- Be encouraging and supportive
-- Use clear explanations with examples when helpful
-- If using information from the context, cite it naturally (e.g., "According to the document...")
-- If the context doesn't help, clearly state you're using general knowledge
-- Keep responses educational and engaging
-- Ask follow-up questions to ensure understanding
-
-Answer:"""
-
-        return PromptTemplate(
-            template=template,
-            input_variables=["context", "chat_history", "question"]
-        )
-    
-    def _create_rag_chain(self) -> RetrievalQA:
-        """Create the RAG chain with retriever and LLM."""
-        retriever = self.vector_store.get_retriever(
-            search_kwargs={"k": 5}
-        )
-        
-        return RetrievalQA.from_chain_type(
-            llm=self.llm,
-            chain_type="stuff",
-            retriever=retriever,
-            chain_type_kwargs={"prompt": self.prompt_template},
-            return_source_documents=True
-        )
+    # Using direct LLM calls for better conversation history support
     
     def query_with_context(
         self, 
@@ -92,22 +43,40 @@ Answer:"""
             # Prepare context from retrieved documents
             context = self._format_context(relevant_docs)
             
-            # Query the RAG chain
-            result = self.rag_chain({
-                "query": question,
-                "context": context,
-                "chat_history": chat_history
-            })
+            # Create a comprehensive prompt with context and history
+            full_prompt = f"""
+You are AI Chatbot, an intelligent AI tutor. Use the following context from the knowledge base and previous conversation to help answer the student's question.
+
+Context from Knowledge Base:
+{context}
+
+Previous Conversation:
+{chat_history}
+
+Student's Question: {question}
+
+Guidelines:
+- Be encouraging and supportive
+- Use clear explanations with examples when helpful
+- If using information from the context, cite it naturally (e.g., "According to the document...")
+- Reference previous conversation when relevant
+- Keep responses educational and engaging
+- Ask follow-up questions to ensure understanding
+
+Answer:"""
+            
+            # Use the LLM directly for better control
+            response = self.llm.invoke(full_prompt)
             
             return {
-                "answer": result["result"],
+                "answer": response.content,
                 "source_documents": [
                     {
                         "content": doc.page_content[:200] + "..." if len(doc.page_content) > 200 else doc.page_content,
                         "metadata": doc.metadata,
                         "source": doc.metadata.get("source", "Unknown")
                     }
-                    for doc in result.get("source_documents", [])
+                    for doc in relevant_docs
                 ],
                 "has_context": True,
                 "context_used": len(relevant_docs) > 0
@@ -168,8 +137,7 @@ Answer:"""
         try:
             ids = self.vector_store.add_documents(documents)
             
-            # Recreate the RAG chain to include new documents
-            self.rag_chain = self._create_rag_chain()
+            # Documents added to vector store successfully
             
             return {
                 "success": True,
