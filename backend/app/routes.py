@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from app.models import ChatMessage
 from app.database import messages_col
+from app.rag_service import get_rag_service
 import os
 from datetime import datetime
 from dotenv import load_dotenv
@@ -60,6 +61,64 @@ async def chat_endpoint(chat: ChatMessage):
     
     except Exception as e:
         logger.error(f"AI Chatbot - Error in chat endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail="Sorry, I encountered an error. Please try again.")
+
+@router.post("/chat/rag")
+async def rag_chat_endpoint(chat: ChatMessage):
+    """Enhanced chat endpoint with RAG (Retrieval-Augmented Generation) capabilities."""
+    try:
+        if not chat.message.strip():
+            raise HTTPException(status_code=400, detail="Message cannot be empty")
+        
+        # Save user message with timestamp
+        user_message = {
+            "text": chat.message,
+            "sender": "user",
+            "timestamp": datetime.utcnow()
+        }
+        messages_col.insert_one(user_message)
+
+        # Get conversation history for context
+        recent_messages = list(messages_col.find().sort("timestamp", -1).limit(6))
+        recent_messages.reverse()
+        
+        # Format chat history for RAG
+        chat_history = "\n".join([
+            f"{msg['sender'].title()}: {msg['text']}"
+            for msg in recent_messages[:-1]  # Exclude current message
+        ])
+
+        # Generate RAG-enhanced response
+        rag_service = get_rag_service()
+        rag_result = rag_service.query_with_context(
+            question=chat.message,
+            chat_history=chat_history
+        )
+        
+        bot_reply = rag_result["answer"]
+        
+        # Save bot reply with RAG metadata
+        bot_message = {
+            "text": bot_reply,
+            "sender": "bot",
+            "timestamp": datetime.utcnow(),
+            "rag_metadata": {
+                "context_used": rag_result["context_used"],
+                "has_context": rag_result["has_context"],
+                "source_count": len(rag_result["source_documents"])
+            }
+        }
+        messages_col.insert_one(bot_message)
+
+        return {
+            "reply": bot_reply,
+            "context_used": rag_result["context_used"],
+            "has_context": rag_result["has_context"],
+            "source_documents": rag_result["source_documents"]
+        }
+    
+    except Exception as e:
+        logger.error(f"AI Chatbot RAG - Error in chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail="Sorry, I encountered an error. Please try again.")
 
 async def generate_tutor_response(user_message: str) -> str:

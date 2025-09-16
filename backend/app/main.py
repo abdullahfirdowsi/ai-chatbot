@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import router
+from app.document_routes import router as document_router
 
 app = FastAPI(
     title="AI Chatbot API",
@@ -20,3 +21,4 @@ app.add_middleware(
 )
 
 app.include_router(router)
+app.include_router(document_router)

@@ -1,0 +1,266 @@
+<div class="documents-container">
+  <div class="header">
+    <h1>📚 Knowledge Base Management</h1>
+    <p>Upload, search, and manage documents for your AI chatbot's knowledge base</p>
+  </div>
+
+  <mat-tab-group class="main-tabs">
+    <!-- Upload Documents Tab -->
+    <mat-tab label="📤 Upload Documents">
+      <div class="tab-content">
+        <mat-card class="upload-card">
+          <mat-card-header>
+            <mat-card-title>Upload New Document</mat-card-title>
+            <mat-card-subtitle>Add documents to enhance your chatbot's knowledge</mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="upload-area" [class.has-file]="selectedFile">
+              <input 
+                type="file" 
+                id="fileInput" 
+                (change)="onFileSelected($event)"
+                [accept]="acceptedFileFormats"
+                style="display: none">
+              
+              <div *ngIf="!selectedFile" class="drop-zone" (click)="openFileSelector()">
+                <mat-icon class="upload-icon">cloud_upload</mat-icon>
+                <h3>Click to select a file</h3>
+                <p>or drag and drop it here</p>
+                <div class="supported-formats">
+                  <strong>Supported formats:</strong>
+                  <mat-chip-listbox>
+                    <mat-chip *ngFor="let format of supportedFormats">
+                      {{ format.ext }} - {{ format.desc }}
+                    </mat-chip>
+                  </mat-chip-listbox>
+                </div>
+              </div>
+              
+              <div *ngIf="selectedFile" class="file-selected">
+                <mat-icon class="file-icon">description</mat-icon>
+                <div class="file-info">
+                  <h3>{{ selectedFile.name }}</h3>
+                  <p>{{ formatFileSize(selectedFile.size) }}</p>
+                </div>
+                <button mat-icon-button (click)="selectedFile = null" class="remove-file">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            </div>
+            
+            <div class="upload-actions" *ngIf="selectedFile">
+              <button 
+                mat-raised-button 
+                color="primary" 
+                (click)="uploadDocument()"
+                [disabled]="isUploading">
+                <mat-icon *ngIf="!isUploading">upload</mat-icon>
+                <mat-spinner *ngIf="isUploading" diameter="20"></mat-spinner>
+                {{ isUploading ? 'Processing...' : 'Upload Document' }}
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- Search Documents Tab -->
+    <mat-tab label="🔍 Search Knowledge Base">
+      <div class="tab-content">
+        <mat-card class="search-card">
+          <mat-card-header>
+            <mat-card-title>Search Documents</mat-card-title>
+            <mat-card-subtitle>Find relevant information in your knowledge base</mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="search-form">
+              <mat-form-field class="search-input">
+                <mat-label>Enter your search query</mat-label>
+                <input 
+                  matInput 
+                  [(ngModel)]="searchQuery" 
+                  (keyup.enter)="searchDocuments()"
+                  placeholder="e.g., machine learning algorithms">
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+              
+              <div class="search-actions">
+                <button 
+                  mat-raised-button 
+                  color="primary" 
+                  (click)="searchDocuments()"
+                  [disabled]="!searchQuery.trim() || isSearching">
+                  <mat-icon *ngIf="!isSearching">search</mat-icon>
+                  <mat-spinner *ngIf="isSearching" diameter="20"></mat-spinner>
+                  {{ isSearching ? 'Searching...' : 'Search' }}
+                </button>
+                
+                <button 
+                  mat-button 
+                  (click)="clearSearch()"
+                  *ngIf="searchResults.length > 0">
+                  Clear Results
+                </button>
+              </div>
+            </div>
+            
+            <!-- Search Results -->
+            <div class="search-results" *ngIf="searchResults.length > 0">
+              <h3>Search Results ({{ searchResults.length }})</h3>
+              
+              <div class="result-item" *ngFor="let result of searchResults">
+                <mat-card class="result-card">
+                  <mat-card-header>
+                    <mat-card-title>{{ result.source }}</mat-card-title>
+                    <mat-card-subtitle>{{ result.metadata.file_type?.toUpperCase() }} Document</mat-card-subtitle>
+                  </mat-card-header>
+                  
+                  <mat-card-content>
+                    <p class="result-content">{{ truncateText(result.content, 300) }}</p>
+                    
+                    <div class="result-metadata" *ngIf="result.metadata.title">
+                      <strong>Title:</strong> {{ result.metadata.title }}
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- Test RAG Tab -->
+    <mat-tab label="🧪 Test RAG">
+      <div class="tab-content">
+        <mat-card class="test-card">
+          <mat-card-header>
+            <mat-card-title>Test RAG System</mat-card-title>
+            <mat-card-subtitle>Test how your chatbot responds using the knowledge base</mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="test-form">
+              <mat-form-field class="test-input">
+                <mat-label>Ask a question to test RAG</mat-label>
+                <textarea 
+                  matInput 
+                  [(ngModel)]="testQuery" 
+                  rows="3"
+                  placeholder="e.g., What is machine learning?">
+                </textarea>
+              </mat-form-field>
+              
+              <div class="test-actions">
+                <button 
+                  mat-raised-button 
+                  color="accent" 
+                  (click)="testRAGQuery()"
+                  [disabled]="!testQuery.trim() || isTestingQuery">
+                  <mat-icon *ngIf="!isTestingQuery">psychology</mat-icon>
+                  <mat-spinner *ngIf="isTestingQuery" diameter="20"></mat-spinner>
+                  {{ isTestingQuery ? 'Testing...' : 'Test RAG Query' }}
+                </button>
+                
+                <button 
+                  mat-button 
+                  (click)="clearTestResult()"
+                  *ngIf="testResult">
+                  Clear Result
+                </button>
+              </div>
+            </div>
+            
+            <!-- Test Result -->
+            <div class="test-result" *ngIf="testResult">
+              <mat-card class="result-card">
+                <mat-card-header>
+                  <mat-card-title>
+                    RAG Response
+                    <mat-icon 
+                      [color]="testResult.context_used ? 'primary' : 'warn'"
+                      class="context-indicator">
+                      {{ testResult.context_used ? 'library_books' : 'help_outline' }}
+                    </mat-icon>
+                  </mat-card-title>
+                  <mat-card-subtitle>
+                    {{ testResult.context_used ? 'Using knowledge base context' : 'Using general knowledge only' }}
+                  </mat-card-subtitle>
+                </mat-card-header>
+                
+                <mat-card-content>
+                  <div class="answer-section">
+                    <h4>Answer:</h4>
+                    <div class="answer-text" [innerHTML]="testResult.answer"></div>
+                  </div>
+                  
+                  <div class="sources-section" *ngIf="testResult.source_documents?.length > 0">
+                    <h4>Source Documents ({{ testResult.source_documents.length }}):</h4>
+                    <div class="source-item" *ngFor="let source of testResult.source_documents">
+                      <strong>{{ source.source }}:</strong>
+                      <p>{{ truncateText(source.content, 150) }}</p>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- Stats Tab -->
+    <mat-tab label="📊 Statistics">
+      <div class="tab-content">
+        <mat-card class="stats-card">
+          <mat-card-header>
+            <mat-card-title>Knowledge Base Statistics</mat-card-title>
+            <mat-card-subtitle>Overview of your knowledge base</mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div *ngIf="isLoadingStats" class="loading-stats">
+              <mat-spinner diameter="40"></mat-spinner>
+              <p>Loading statistics...</p>
+            </div>
+            
+            <div *ngIf="!isLoadingStats && stats" class="stats-grid">
+              <div class="stat-item">
+                <mat-icon class="stat-icon">description</mat-icon>
+                <div class="stat-content">
+                  <h3>{{ stats.total_documents | number }}</h3>
+                  <p>Total Document Chunks</p>
+                </div>
+              </div>
+              
+              <div class="stat-item">
+                <mat-icon class="stat-icon">analytics</mat-icon>
+                <div class="stat-content">
+                  <h3>{{ stats.embedding_dimension | number }}</h3>
+                  <p>Embedding Dimensions</p>
+                </div>
+              </div>
+              
+              <div class="stat-item">
+                <mat-icon class="stat-icon">folder</mat-icon>
+                <div class="stat-content">
+                  <h3>FAISS</h3>
+                  <p>Vector Database</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="refresh-stats">
+              <button mat-button color="primary" (click)="loadStats()">
+                <mat-icon>refresh</mat-icon>
+                Refresh Statistics
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
