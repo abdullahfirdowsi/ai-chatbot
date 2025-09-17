@@ -316,8 +316,6 @@ CORS_ORIGINS=["https://yourdomain.com"]
 - [ ] **Mobile Apps** - iOS and Android applications
 - [ ] **Enterprise Features** - SSO, RBAC, audit logs
 
----
-
 ## 🎆 **Ready to Get Started?**
 
 1. Clone the repository
