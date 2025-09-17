@@ -232,10 +232,10 @@
 
 /* Messages List */
 .messages-list {
-  padding: 1.5rem 1.5rem 3rem 1.5rem; /* Optimized bottom padding - just enough to clear input */
+  padding: 1rem 1.5rem 1.5rem 1.5rem; /* Reduced padding for more compact layout */
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem; /* Reduced gap between messages */
 }
 
 .message-wrapper {
@@ -449,7 +449,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 1.5rem 1.5rem 3rem 1.5rem; /* Match messages list padding */
+  padding: 1rem 1.5rem 1.5rem 1.5rem; /* Match reduced messages list padding */
   animation: fade-in 0.3s ease-out;
 }
 
@@ -504,7 +504,7 @@
 .input-area {
   background: var(--white);
   border-top: 1px solid var(--gray-200);
-  padding: 1.25rem 1.5rem 1rem 1.5rem;
+  padding: 1rem 1.5rem 0.75rem 1.5rem; /* Reduced padding for more compact layout */
 }
 
 .message-form {

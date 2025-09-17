@@ -1,6 +1,6 @@
-# 🤖 VizTalk AI Tutor Chatbot with RAG
+# 🤖 AI Chatbot with RAG
 
-A full-stack AI tutor chatbot application with **Retrieval-Augmented Generation (RAG)** capabilities, built with Angular, FastAPI, LangChain, and FAISS vector database.
+A full-stack AI chatbot application with **Retrieval-Augmented Generation (RAG)** capabilities, built with Angular, FastAPI, LangChain, and FAISS vector database.
 
 ## ✨ Key Features
 
@@ -16,7 +16,7 @@ A full-stack AI tutor chatbot application with **Retrieval-Augmented Generation 
 ## Project Structure
 
 ```
-viztalk-ai-tutor-chatbot/
+ai-chatbot/
 ├── frontend/                 # Angular frontend with Material UI
 │   ├── src/app/
 │   │   ├── chat/            # Main chat component
