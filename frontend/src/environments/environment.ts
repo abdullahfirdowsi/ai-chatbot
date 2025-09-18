@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://your-render-backend-url.onrender.com'
+  apiUrl: 'https://ai-chatbot-using-rag-ilink-digital.onrender.com'
 };
