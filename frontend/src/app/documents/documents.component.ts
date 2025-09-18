@@ -13,7 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatChipsModule } from '@angular/material/chips';
 import { firstValueFrom } from 'rxjs';
 import { RagService, KnowledgeBaseStats } from '../services/rag.service';
-import { environment } from '../../environments/environment.development';
+import { environment } from '../../environments/environment';
 
 interface DocumentResult {
   content: string;
