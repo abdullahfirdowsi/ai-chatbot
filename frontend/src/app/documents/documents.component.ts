@@ -13,6 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatChipsModule } from '@angular/material/chips';
 import { firstValueFrom } from 'rxjs';
 import { RagService, KnowledgeBaseStats } from '../services/rag.service';
+import { environment } from '../../environments/environment.development';
 
 interface DocumentResult {
   content: string;
@@ -40,7 +41,7 @@ interface DocumentResult {
   styleUrls: ['./documents.component.css']
 })
 export class DocumentsComponent implements OnInit {
-  private readonly API_BASE_URL = 'http://localhost:8000';
+  private readonly API_BASE_URL = environment.apiUrl;
   
   // Upload state
   selectedFile: File | null = null;

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface KnowledgeBaseStats {
   total_documents: number;
@@ -12,7 +13,7 @@ export interface KnowledgeBaseStats {
   providedIn: 'root'
 })
 export class RagService {
-  private readonly API_BASE_URL = 'http://localhost:8000';
+  private readonly API_BASE_URL = environment.apiUrl;
   private knowledgeBaseAvailable = new BehaviorSubject<boolean>(false);
 
   constructor(private http: HttpClient) {

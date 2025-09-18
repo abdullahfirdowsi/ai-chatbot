@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RagService } from '../services/rag.service';
 import { Subscription } from 'rxjs';
+import { environment } from '../../environments/environment.development';
 
 interface Message {
   text: string;
@@ -31,7 +32,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   isLoading: boolean = false;
   isKnowledgeBaseAvailable = false;
   private subscription?: Subscription;
-  private readonly API_BASE_URL = 'http://localhost:8000';
+  private readonly API_BASE_URL = environment.apiUrl;
 
   constructor(
     private http: HttpClient, 
